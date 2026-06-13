@@ -34,7 +34,9 @@ Monte internamente (não exiba ainda):
 
 ## Fase 2 — Entrevista
 
-Apresente um resumo compacto do diagnóstico e faça todas as perguntas abaixo em uma única mensagem. Espere as respostas antes de continuar.
+**Importante:** faça as perguntas como texto simples na conversa, em uma única mensagem. Não use ferramentas de formulário ou UI interativa. Aguarde a resposta do usuário antes de continuar para a Fase 3.
+
+Apresente um resumo compacto do diagnóstico e faça todas as perguntas abaixo em uma única mensagem.
 
 ### 1. Agentes de IA usados pelo time *(múltipla escolha)*
 
