@@ -1,0 +1,103 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    name: Validar estrutura e frontmatter
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verificar frontmatter em regras
+        run: |
+          echo "Verificando frontmatter em .windsurf/rules/*.md"
+          ERRORS=0
+          for file in .windsurf/rules/*.md; do
+            if ! grep -q "^---" "$file"; then
+              echo "::error file=$file::Falta frontmatter YAML (---) em $file"
+              ERRORS=$((ERRORS + 1))
+            fi
+            if ! grep -q "trigger:" "$file"; then
+              echo "::error file=$file::Campo 'trigger' ausente em $file"
+              ERRORS=$((ERRORS + 1))
+            fi
+            if ! grep -q "description:" "$file"; then
+              echo "::error file=$file::Campo 'description' ausente em $file"
+              ERRORS=$((ERRORS + 1))
+            fi
+          done
+          if [ "$ERRORS" -gt 0 ]; then
+            echo "::error::$ERRORS arquivo(s) com frontmatter inválido."
+            exit 1
+          fi
+          echo "Todos os arquivos de regra têm frontmatter válido."
+
+      - name: Verificar frontmatter em workflows
+        run: |
+          echo "Verificando frontmatter em .windsurf/workflows/*.md"
+          ERRORS=0
+          for file in .windsurf/workflows/*.md; do
+            if ! grep -q "^---" "$file"; then
+              echo "::error file=$file::Falta frontmatter YAML (---) em $file"
+              ERRORS=$((ERRORS + 1))
+            fi
+            if ! grep -q "description:" "$file"; then
+              echo "::error file=$file::Campo 'description' ausente em $file"
+              ERRORS=$((ERRORS + 1))
+            fi
+          done
+          if [ "$ERRORS" -gt 0 ]; then
+            echo "::error::$ERRORS arquivo(s) de workflow com frontmatter inválido."
+            exit 1
+          fi
+          echo "Todos os workflows têm frontmatter válido."
+
+      - name: Verificar links de README por stack
+        run: |
+          echo "Verificando READMEs de stack"
+          STACKS="Angular Backend Frontend GO JAVA Mobile NestJS NextJS Python VITE VUE"
+          ERRORS=0
+          for stack in $STACKS; do
+            if [ ! -f "$stack/README.md" ]; then
+              echo "::error::README ausente em $stack/"
+              ERRORS=$((ERRORS + 1))
+            fi
+          done
+          if [ "$ERRORS" -gt 0 ]; then
+            echo "::error::$ERRORS README(s) de stack ausente(s)."
+            exit 1
+          fi
+          echo "Todos os READMEs de stack presentes."
+
+      - name: Verificar templates
+        run: |
+          echo "Verificando templates/"
+          for file in templates/AGENTS.md templates/CLAUDE.md; do
+            if [ ! -f "$file" ]; then
+              echo "::error::Template ausente: $file"
+              exit 1
+            fi
+          done
+          echo "Templates OK."
+
+      - name: Contar arquivos de regra
+        run: |
+          COUNT=$(find .windsurf/rules -name "*.md" | wc -l | tr -d ' ')
+          echo "Total de arquivos de regra: $COUNT"
+          echo "rule_count=$COUNT" >> "$GITHUB_ENV"
+
+      - name: Resumo da validação
+        run: |
+          echo "## Resultado da validação" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Regras validadas:** $(find .windsurf/rules -name '*.md' | wc -l | tr -d ' ')" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Workflows validados:** $(find .windsurf/workflows -name '*.md' | wc -l | tr -d ' ')" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Stacks cobertas:** Angular, Backend, Frontend, GO, JAVA, Mobile, NestJS, NextJS, Python, VITE, VUE" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Frontmatter e estrutura OK." >> "$GITHUB_STEP_SUMMARY"

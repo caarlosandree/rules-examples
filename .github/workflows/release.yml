@@ -1,0 +1,99 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Publicar release latest
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Gerar notas da release
+        id: notes
+        run: |
+          # Pega o hash da release anterior (última tag ou início do histórico)
+          PREV_TAG=$(git tag --sort=-creatordate | head -n 1)
+          if [ -z "$PREV_TAG" ]; then
+            RANGE="HEAD"
+            echo "Nenhuma tag anterior encontrada. Usando todo o histórico."
+          else
+            RANGE="${PREV_TAG}..HEAD"
+            echo "Comparando a partir de: $PREV_TAG"
+          fi
+
+          # Agrupa commits por tipo (Conventional Commits)
+          FEATS=$(git log $RANGE --pretty=format:"%s" | grep -E "^feat(\(.+\))?!?:" | sed 's/^/- /' || true)
+          FIXES=$(git log $RANGE --pretty=format:"%s" | grep -E "^fix(\(.+\))?!?:" | sed 's/^/- /' || true)
+          DOCS=$(git log $RANGE --pretty=format:"%s" | grep -E "^docs(\(.+\))?:" | sed 's/^/- /' || true)
+          REFACTOR=$(git log $RANGE --pretty=format:"%s" | grep -E "^refactor(\(.+\))?:" | sed 's/^/- /' || true)
+          CHORE=$(git log $RANGE --pretty=format:"%s" | grep -E "^chore(\(.+\))?:" | sed 's/^/- /' || true)
+          OTHER=$(git log $RANGE --pretty=format:"%s" | grep -vE "^(feat|fix|docs|refactor|chore|test|style|perf|ci|build)(\(.+\))?!?:" | sed 's/^/- /' || true)
+
+          # Monta o corpo das notas
+          NOTES="## O que mudou\n\n"
+          NOTES+="_Branch:_ \`$(git rev-parse --abbrev-ref HEAD)\`  \n"
+          NOTES+="_Commit:_ \`$(git rev-parse --short HEAD)\`  \n"
+          NOTES+="_Data:_ $(date -u '+%Y-%m-%d %H:%M UTC')\n\n"
+
+          if [ -n "$FEATS" ]; then
+            NOTES+="### Novas funcionalidades\n$FEATS\n\n"
+          fi
+          if [ -n "$FIXES" ]; then
+            NOTES+="### Correções\n$FIXES\n\n"
+          fi
+          if [ -n "$DOCS" ]; then
+            NOTES+="### Documentação\n$DOCS\n\n"
+          fi
+          if [ -n "$REFACTOR" ]; then
+            NOTES+="### Refatorações\n$REFACTOR\n\n"
+          fi
+          if [ -n "$CHORE" ]; then
+            NOTES+="### Chore / Manutenção\n$CHORE\n\n"
+          fi
+          if [ -n "$OTHER" ]; then
+            NOTES+="### Outros commits\n$OTHER\n\n"
+          fi
+
+          # Estatísticas dos arquivos de regra
+          RULE_COUNT=$(find .windsurf/rules -name "*.md" | wc -l | tr -d ' ')
+          WORKFLOW_COUNT=$(find .windsurf/workflows -name "*.md" | wc -l | tr -d ' ')
+          NOTES+="---\n\n"
+          NOTES+="### Catálogo atual\n"
+          NOTES+="- **$RULE_COUNT** arquivos de regra em \`.windsurf/rules/\`\n"
+          NOTES+="- **$WORKFLOW_COUNT** workflows em \`.windsurf/workflows/\`\n"
+
+          # Salva para uso nos próximos steps
+          printf "%b" "$NOTES" > /tmp/release_notes.md
+          cat /tmp/release_notes.md
+
+      - name: Deletar tag latest existente
+        run: |
+          git tag -d latest 2>/dev/null || true
+          git push origin :refs/tags/latest 2>/dev/null || true
+
+      - name: Criar tag latest
+        run: |
+          git tag latest
+          git push origin latest
+
+      - name: Publicar release latest
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Remove release anterior com a tag latest, se existir
+          gh release delete latest --yes 2>/dev/null || true
+
+          gh release create latest \
+            --title "latest — $(date -u '+%Y-%m-%d')" \
+            --notes-file /tmp/release_notes.md \
+            --latest \
+            --target main
