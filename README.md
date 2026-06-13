@@ -85,7 +85,63 @@ rules-examples/
 └── README.md
 ```
 
-## Como usar
+## Comando `/setup-rules` para Claude Code
+
+Este repositório inclui um comando que transforma o Claude Code em um **arquiteto de regras**: ele analisa o projeto, entrevista o time e **gera regras originais e personalizadas** — usando este repo como referência de padrões, não como fonte de cópia.
+
+### Instalação global
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/caarlosandree/rules-examples/main/.claude/commands/setup-rules.md \
+  -o ~/.claude/commands/setup-rules.md
+```
+
+### Uso
+
+Abra qualquer projeto no Claude Code e execute:
+
+```
+/setup-rules
+```
+
+### O que acontece
+
+**1. Diagnóstico automático** — O Claude lê `package.json`, `go.mod`, `pom.xml`, `docker-compose.yml`, `Makefile`, `README.md` e a estrutura de pastas para entender o projeto antes de fazer qualquer pergunta.
+
+**2. Entrevista** — Com o diagnóstico em mãos, o Claude faz perguntas objetivas:
+- Quais agentes de IA o time usa? *(múltipla escolha: Claude Code, Cursor, Windsurf, Copilot, Cline…)*
+- A stack detectada está correta?
+- Qual o banco de dados?
+- Qual o tipo do projeto? *(API, fullstack, monorepo, mobile…)*
+- Há convenções ou restrições do time que as regras devem reforçar?
+
+**3. Leitura das referências** — O Claude lê os arquivos relevantes deste repo via GitHub como referência de padrões e boas práticas para a stack do projeto.
+
+**4. Geração de regras personalizadas** — Com base no diagnóstico, nas respostas e nas referências, o Claude escreve regras **específicas para este projeto**: nomes reais de módulos, comandos reais de build/test, restrições do time integradas, exemplos de código com a stack real.
+
+**5. Escrita multi-agente** — As regras são gravadas no local certo para cada agente selecionado:
+
+| Agente | Destino |
+|---|---|
+| Claude Code | `CLAUDE.md` + `.claude/commands/` |
+| Cursor | `.cursor/rules/*.mdc` |
+| Windsurf | `.windsurf/rules/*.md` |
+| GitHub Copilot | `.github/copilot-instructions.md` |
+| Cline / Continue | `.clinerules` / `.continuerules` |
+
+**6. Resumo** — Lista de arquivos criados por agente, pontos que o time deve revisar e como evoluir as regras no futuro.
+
+### Instalação rápida com npx *(alternativa sem Claude Code)*
+
+Para instalar regras genéricas baseadas na stack sem passar pela entrevista:
+
+```bash
+npx setup-ai-rules
+```
+
+---
+
+## Como usar (manual)
 
 ### 1. Escolha a entrada
 
