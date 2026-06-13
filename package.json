@@ -1,0 +1,23 @@
+{
+  "name": "setup-ai-rules",
+  "version": "1.0.0",
+  "description": "CLI para instalar regras de desenvolvimento para agentes de IA (Claude Code, Cursor, Windsurf)",
+  "keywords": ["claude-code", "windsurf", "cursor", "ai-rules", "ai-agents", "development-rules"],
+  "homepage": "https://github.com/caarlosandree/rules-examples",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/caarlosandree/rules-examples.git"
+  },
+  "license": "MIT",
+  "bin": {
+    "setup-ai-rules": "./bin/setup-rules.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "bin/",
+    ".windsurf/rules/",
+    "templates/"
+  ]
+}
