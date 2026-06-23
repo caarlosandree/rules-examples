@@ -10,7 +10,8 @@
   },
   "license": "MIT",
   "bin": {
-    "setup-ai-rules": "./bin/setup-rules.js"
+    "setup-ai-rules": "./bin/setup-rules.js",
+    "sync-skills": "./bin/sync-skills.js"
   },
   "engines": {
     "node": ">=18"
