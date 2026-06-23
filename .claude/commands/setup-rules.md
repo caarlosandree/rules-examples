@@ -45,6 +45,7 @@ Quais agentes de IA o time usa neste projeto?
 - Claude Code
 - Cursor
 - Windsurf
+- Antigravity
 - GitHub Copilot
 - Cline
 - Continue
@@ -154,9 +155,16 @@ As regras são **criadas uma única vez** e adaptadas para o formato de cada age
 | **Windsurf** | `.windsurf/rules/*.md` — frontmatter com `trigger` e `globs` |
 | **Cursor** | `.cursor/rules/*.mdc` — frontmatter com `alwaysApply: true/false` e `globs` |
 | **Claude Code** | `CLAUDE.md` na raiz (instruções gerais) + `.claude/commands/` (workflows) |
+| **Antigravity** | `AGENTS.md` na raiz — arquivo único consolidado (o agy lê automaticamente) |
 | **GitHub Copilot** | `.github/copilot-instructions.md` — arquivo único consolidado |
 | **Cline** | `.clinerules` na raiz — arquivo único consolidado |
 | **Continue** | `.continuerules` na raiz — arquivo único consolidado |
+
+### Sobre o `AGENTS.md` (Antigravity)
+
+Gere um `AGENTS.md` consolidado para o projeto com todas as regras em um único arquivo bem estruturado. O agy (CLI do Antigravity) lê este arquivo automaticamente ao abrir o projeto.
+
+Consolide as regras selecionadas com seções por tema, sem duplicar frontmatter YAML. Priorize clareza e densidade — o Antigravity não suporta múltiplos arquivos com globs, apenas o `AGENTS.md` único.
 
 ### Sobre o `CLAUDE.md` (Claude Code)
 
