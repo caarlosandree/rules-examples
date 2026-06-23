@@ -92,6 +92,7 @@ Este repositório inclui um comando que transforma o Claude Code em um **arquite
 ### Instalação global
 
 ```bash
+mkdir -p ~/.claude/commands && \
 curl -fsSL https://raw.githubusercontent.com/caarlosandree/rules-examples/main/.claude/commands/setup-rules.md \
   -o ~/.claude/commands/setup-rules.md
 ```

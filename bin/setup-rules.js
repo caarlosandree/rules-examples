@@ -128,6 +128,32 @@ function installFiles(files, destDir) {
   return { installed, missing };
 }
 
+// --- Geração do AGENTS.md consolidado ---
+function buildAgentsMd(files) {
+  const lines = ['# Agent Instructions\n'];
+  lines.push('> Gerado por setup-ai-rules — edite conforme o contexto real do projeto.\n');
+
+  for (const file of files) {
+    const src = path.join(RULES_DIR, file);
+    if (!fs.existsSync(src)) continue;
+    let content = fs.readFileSync(src, 'utf8');
+    // remove frontmatter YAML
+    content = content.replace(/^---[\s\S]*?---\s*\n?/, '');
+    const title = file.replace(/\.md$/, '');
+    lines.push(`\n---\n\n## ${title}\n`);
+    lines.push(content.trim());
+  }
+
+  return lines.join('\n') + '\n';
+}
+
+function installAgentsMd(files, destPath) {
+  const content = buildAgentsMd([...files]);
+  if (fs.existsSync(destPath)) return { existed: true, content };
+  fs.writeFileSync(destPath, content, 'utf8');
+  return { existed: false, content };
+}
+
 // --- Main ---
 async function main() {
   console.log(`\n${c.bold}${c.cyan}setup-ai-rules${c.reset} — regras de desenvolvimento para agentes de IA\n`);
@@ -155,22 +181,46 @@ async function main() {
     [...files].forEach(f => log.item(f));
 
     // 4. Confirmar e personalizar
-    const proceed = await confirm(rl, '\nInstalar em .windsurf/rules/?');
+    const proceed = await confirm(rl, '\nProsseguir com a instalação?');
     if (!proceed) { console.log('\nCancelado.\n'); return; }
 
     const addSecurity = await confirm(rl, 'Incluir auditoria de segurança avançada (security-analysis.md)?', false);
     if (addSecurity) files.add('security-analysis.md');
 
-    const addTemplates = await confirm(rl, 'Copiar templates AGENTS.md e CLAUDE.md?');
+    const addWindsurf    = await confirm(rl, 'Instalar regras para Windsurf (.windsurf/rules/)?');
+    const addAntigravity = await confirm(rl, 'Instalar regras para Antigravity (AGENTS.md consolidado)?', false);
+    const addTemplates   = await confirm(rl, 'Copiar templates base (AGENTS.md / CLAUDE.md)?', !addAntigravity);
 
-    // 5. Instalar regras
-    log.section('Instalando regras...');
-    const { installed, missing } = installFiles([...files], path.join(CWD, '.windsurf', 'rules'));
+    // 5. Instalar regras — Windsurf
+    let installed = 0;
+    let missing = 0;
+    if (addWindsurf) {
+      log.section('Instalando regras em .windsurf/rules/...');
+      ({ installed, missing } = installFiles([...files], path.join(CWD, '.windsurf', 'rules')));
+    }
+
+    // 5b. Instalar regras — Antigravity (AGENTS.md consolidado)
+    if (addAntigravity) {
+      log.section('Gerando AGENTS.md para Antigravity...');
+      const agentsDst = path.join(CWD, 'AGENTS.md');
+      let doWrite = true;
+      if (fs.existsSync(agentsDst)) {
+        doWrite = await confirm(rl, 'AGENTS.md já existe. Sobrescrever com versão consolidada?', false);
+      }
+      if (doWrite) {
+        const content = buildAgentsMd([...files]);
+        fs.writeFileSync(agentsDst, content, 'utf8');
+        log.ok('AGENTS.md (consolidado com todas as regras)');
+      } else {
+        log.warn('AGENTS.md mantido sem alteração.');
+      }
+    }
 
     // 6. Copiar templates
     if (addTemplates) {
       log.section('Copiando templates...');
-      for (const tpl of ['AGENTS.md', 'CLAUDE.md']) {
+      const tpls = addAntigravity ? ['CLAUDE.md'] : ['AGENTS.md', 'CLAUDE.md'];
+      for (const tpl of tpls) {
         const src = path.join(TEMPLATES_DIR, tpl);
         const dst = path.join(CWD, tpl);
         if (!fs.existsSync(src)) { log.warn(`template não encontrado: ${tpl}`); continue; }
@@ -185,11 +235,19 @@ async function main() {
 
     // 7. Resumo final
     console.log(`\n${c.green}${c.bold}✅ Pronto!${c.reset}`);
-    console.log(`   ${installed} regra(s) instalada(s) em .windsurf/rules/`);
-    if (missing) console.log(`   ${c.yellow}${missing} arquivo(s) não encontrado(s) — verifique a versão do pacote${c.reset}`);
+    if (addWindsurf) {
+      console.log(`   ${installed} regra(s) instalada(s) em .windsurf/rules/`);
+      if (missing) console.log(`   ${c.yellow}${missing} arquivo(s) não encontrado(s) — verifique a versão do pacote${c.reset}`);
+    }
+    if (addAntigravity) console.log(`   AGENTS.md consolidado gerado na raiz do projeto`);
     console.log(`\n${c.gray}Próximos passos:${c.reset}`);
-    console.log(`  1. Edite AGENTS.md e CLAUDE.md com os dados reais do projeto`);
-    console.log(`  2. Ajuste versões, comandos e namespaces nos arquivos de regra`);
+    if (addAntigravity) {
+      console.log(`  1. Abra AGENTS.md e ajuste nomes de módulos, comandos e restrições reais`);
+      console.log(`  2. Abra o projeto no Antigravity — o agy já lerá AGENTS.md automaticamente`);
+    } else {
+      console.log(`  1. Edite AGENTS.md e CLAUDE.md com os dados reais do projeto`);
+      console.log(`  2. Ajuste versões, comandos e namespaces nos arquivos de regra`);
+    }
     console.log(`  3. Abra o projeto no Claude Code, Cursor ou Windsurf — as regras já estarão ativas\n`);
 
   } finally {

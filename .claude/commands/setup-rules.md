@@ -34,7 +34,9 @@ Monte internamente (não exiba ainda):
 
 ## Fase 2 — Entrevista
 
-Apresente um resumo compacto do diagnóstico e faça todas as perguntas abaixo em uma única mensagem. Espere as respostas antes de continuar.
+**Importante:** faça as perguntas como texto simples na conversa, em uma única mensagem. Não use ferramentas de formulário ou UI interativa. Aguarde a resposta do usuário antes de continuar para a Fase 3.
+
+Apresente um resumo compacto do diagnóstico e faça todas as perguntas abaixo em uma única mensagem.
 
 ### 1. Agentes de IA usados pelo time *(múltipla escolha)*
 
@@ -43,6 +45,7 @@ Quais agentes de IA o time usa neste projeto?
 - Claude Code
 - Cursor
 - Windsurf
+- Antigravity
 - GitHub Copilot
 - Cline
 - Continue
@@ -152,9 +155,16 @@ As regras são **criadas uma única vez** e adaptadas para o formato de cada age
 | **Windsurf** | `.windsurf/rules/*.md` — frontmatter com `trigger` e `globs` |
 | **Cursor** | `.cursor/rules/*.mdc` — frontmatter com `alwaysApply: true/false` e `globs` |
 | **Claude Code** | `CLAUDE.md` na raiz (instruções gerais) + `.claude/commands/` (workflows) |
+| **Antigravity** | `AGENTS.md` na raiz — arquivo único consolidado (o agy lê automaticamente) |
 | **GitHub Copilot** | `.github/copilot-instructions.md` — arquivo único consolidado |
 | **Cline** | `.clinerules` na raiz — arquivo único consolidado |
 | **Continue** | `.continuerules` na raiz — arquivo único consolidado |
+
+### Sobre o `AGENTS.md` (Antigravity)
+
+Gere um `AGENTS.md` consolidado para o projeto com todas as regras em um único arquivo bem estruturado. O agy (CLI do Antigravity) lê este arquivo automaticamente ao abrir o projeto.
+
+Consolide as regras selecionadas com seções por tema, sem duplicar frontmatter YAML. Priorize clareza e densidade — o Antigravity não suporta múltiplos arquivos com globs, apenas o `AGENTS.md` único.
 
 ### Sobre o `CLAUDE.md` (Claude Code)
 
